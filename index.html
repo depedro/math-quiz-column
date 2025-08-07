@@ -1,316 +1,481 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doc</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Edu+NSW+ACT+Foundation:wght@400..700&display=swap" rel="stylesheet">
-    <style>
-        @media print {
-            .no-print {
-                display: none !important;
-            }
-            .worksheet-page {
-                break-after: page;
-            }
-            body {
-                padding: 0;
-                margin: 0;
-                background: white;
-            }
-        }
-        .math-problem {
-            font-family: 'Edu NSW ACT Foundation', cursive;
-            font-size: 30px;
-            letter-spacing: 0.5rem;
-            font-variant-numeric: tabular-nums;
-            font-feature-settings: 'tnum' 1;
-            margin-bottom: 2.2rem;
-            border-bottom: 1px solid black;
-        }
-        .operand-row {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-        }
-        .operator {
-          display: flex;
-          justify-content: flex-end;
-          align-items: center;
-          margin-right: 0.5rem;
-        }
-    </style>
-</head>
-<body class="bg-gray-100 p-4">
-    <div class="max-w-4xl mx-auto no-print">
-        <h1 class="text-3xl font-bold text-center mb-6">Math Worksheet Generator</h1>
-        
-        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-            <h2 class="text-xl font-semibold mb-4">Worksheet Options</h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Number of digits</label>
-                    <select id="digits" class="w-full p-2 border border-gray-300 rounded-md">
-                        <option value="2">2 digits</option>
-                        <option value="3" selected>3 digits</option>
-                        <option value="4">4 digits</option>
-                        <option value="5">5 digits</option>
-                    </select>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Regrouping</label>
-                    <select id="regrouping" class="w-full p-2 border border-gray-300 rounded-md">
-                        <option value="allow">Allow regrouping</option>
-                        <option value="disallow">Disallow regrouping</option>
-                        <option value="require">Require regrouping</option>
-                    </select>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Operations</label>
-                    <div class="flex align-items-center space-x-2 mt-2">
-                        <label class="flex items-center">
-                            <input type="checkbox" class="mr-2" id="addition" checked>
-                            <span>Addition</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox" class="mr-2" id="subtraction" checked>
-                            <span>Subtraction</span>
-                        </label>
-                    </div>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Number of pages</label>
-                    <select id="pages" class="w-full p-2 border border-gray-300 rounded-md">
-                        <option value="10">10 pages</option>
-                        <option value="20" selected>20 pages</option>
-                        <option value="40">40 pages</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="mt-6 flex justify-center space-x-4">
-                <button id="generate" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                    Generate Worksheet
-                </button>
-                <button id="print" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
-                    Print Worksheet
-                </button>
-            </div>
-        </div>
-    </div>
-    
-    <div id="worksheet-container" class="hidden"></div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const generateBtn = document.getElementById('generate');
-            const printBtn = document.getElementById('print');
-            const previewBtn = document.getElementById('preview');
-            const worksheetContainer = document.getElementById('worksheet-container');
-            const previewContainer = document.getElementById('preview-container');
-            const previewContent = document.getElementById('preview-content');
-            
-            generateBtn.addEventListener('click', generateWorksheet);
-            printBtn.addEventListener('click', printWorksheet);
-            previewBtn.addEventListener('click', previewWorksheet);
-            
-            function generateWorksheet() {
-                const digits = parseInt(document.getElementById('digits').value);
-                const regrouping = document.getElementById('regrouping').value;
-                const additionChecked = document.getElementById('addition').checked;
-                const subtractionChecked = document.getElementById('subtraction').checked;
-                const pages = parseInt(document.getElementById('pages').value);
-                
-                if (!additionChecked && !subtractionChecked) {
-                    alert('Please select at least one operation type');
-                    return;
-                }
-                
-                worksheetContainer.innerHTML = '';
-                worksheetContainer.classList.remove('hidden');
-                
-                // Generate all pages
-                for (let page = 0; page < pages; page++) {
-                    const pageDiv = document.createElement('div');
-                    pageDiv.className = 'worksheet-page p-8 bg-white';
-                    
-                    const grid = document.createElement('div');
-                    grid.className = 'grid grid-cols-5 gap-10';
-                    
-                    // 32 problems per page (4 columns x 8 rows)
-                    for (let i = 0; i < 30; i++) {
-                        const problem = generateProblem(digits, regrouping, additionChecked, subtractionChecked);
-                        const problemDiv = document.createElement('div');
-                        problemDiv.className = 'math-problem grid grid-cols-2 gap-2';
-                        
-                        const topOperand = document.createElement('div');
-                        topOperand.className = 'operand-row';
-                        topOperand.textContent = problem.top;
-                        
-                        const operator = document.createElement('div');
-                        operator.className = 'operator';
-                        operator.textContent = problem.operator;
-                        
-                        const bottomOperand = document.createElement('div');
-                        bottomOperand.className = 'operand-row';
-                        bottomOperand.textContent = problem.bottom;
-                        
-                        problemDiv.appendChild(document.createElement('div'));
-                        problemDiv.appendChild(topOperand);
-                        problemDiv.appendChild(operator);
-                        problemDiv.appendChild(bottomOperand);
-                        
-                        grid.appendChild(problemDiv);
-                    }
-                    
-                    pageDiv.appendChild(grid);
-                    worksheetContainer.appendChild(pageDiv);
-                }
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doc</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Edu+NSW+ACT+Foundation:wght@400..700&display=swap"
+    rel="stylesheet">
+  <style>
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+
+      .worksheet-page {
+        break-after: page;
+      }
+
+      body {
+        padding: 0;
+        margin: 0;
+        background: white;
+      }
+    }
+
+    .math-problem {
+      font-family: 'Edu NSW ACT Foundation', cursive;
+      font-size: 30px;
+      letter-spacing: 0.5rem;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: 'tnum' 1;
+      margin-bottom: 2.2rem;
+      border-bottom: 1px solid black;
+    }
+
+    .math-col-header {
+      font-family: 'Edu NSW ACT Foundation', cursive;
+      font-size: 14px;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: 'tnum' 1;
+      align-items: center;
+    }
+
+    .math-col {
+      font-family: 'Edu NSW ACT Foundation', cursive;
+      font-size: 30px;
+      letter-spacing: 0.5rem;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: 'tnum' 1;
+      align-items: center;
+    }
+
+    .operand-row {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .operator {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      margin-right: 0.5rem;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 p-4">
+  <div class="max-w-4xl mx-auto no-print">
+    <h1 class="text-3xl font-bold text-center mb-6">Math Worksheet Generator</h1>
+
+    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+      <h2 class="text-xl font-semibold mb-4">Worksheet Options</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-2">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Number of digits</label>
+          <select id="digits" class="w-full p-2 border border-gray-300 rounded-md">
+            <option value="2">2 digits</option>
+            <option value="3" selected>3 digits</option>
+            <option value="4">4 digits</option>
+            <option value="5">5 digits</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Number of digits (Op2)</label>
+          <select id="op2digits" class="w-full p-2 border border-gray-300 rounded-md" disabled>
+            <option value="1" selected>1 digits</option>
+            <option value="2">2 digits</option>
+            <option value="3">3 digits</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Regrouping</label>
+          <select id="regrouping" class="w-full p-2 border border-gray-300 rounded-md">
+            <option value="allow">Allow regrouping</option>
+            <option value="disallow">Disallow regrouping</option>
+            <option value="require" selected>Require regrouping</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Show Zeros</label>
+          <select id="showzeros" class="w-full p-2 border border-gray-300 rounded-md">
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Operations</label>
+          <div class="flex align-items-center space-x-2 mt-2">
+            <label class="flex items-center">
+              <input type="checkbox" class="mr-2" id="addition">
+              <span>Addition</span>
+            </label>
+            <label class="flex items-center">
+              <input type="checkbox" class="mr-2" id="subtraction">
+              <span>Subtraction</span>
+            </label>
+            <label class="flex items-center">
+              <input type="checkbox" class="mr-2" id="multiplication" checked>
+              <span>Multiplication</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Number of pages</label>
+          <select id="pages" class="w-full p-2 border border-gray-300 rounded-md">
+            <option value="10">10 pages</option>
+            <option value="20" selected>20 pages</option>
+            <option value="40">40 pages</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mt-6 flex justify-center space-x-4">
+        <button id="generate" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+          Generate Worksheet
+        </button>
+        <button id="print" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+          Print Worksheet
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="worksheet-container" class="hidden"></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const generateBtn = document.getElementById('generate');
+      const printBtn = document.getElementById('print');
+      const worksheetContainer = document.getElementById('worksheet-container');
+      const additionCheckbox = document.getElementById('addition');
+      const subtractionCheckbox = document.getElementById('subtraction');
+      const multiplicationCheckbox = document.getElementById('multiplication');
+      const op2digitsSelect = document.getElementById('op2digits');
+
+      generateBtn.addEventListener('click', generateWorksheet);
+      printBtn.addEventListener('click', printWorksheet);
+
+      // When multiplication is checked/unchecked
+      multiplicationCheckbox.addEventListener('change', function () {
+        if (this.checked) {
+          // If multiplication is checked, uncheck addition and subtraction
+          additionCheckbox.checked = false;
+          subtractionCheckbox.checked = false;
+          op2digitsSelect.disabled = false;
+          op2digitsSelect.style.opacity = '1';
+        } else {
+          op2digitsSelect.disabled = true;
+          op2digitsSelect.style.opacity = '0.5';
+        }
+      });
+
+      // When addition is checked
+      additionCheckbox.addEventListener('change', function () {
+        if (this.checked) {
+          // If addition is checked, uncheck multiplication
+          multiplicationCheckbox.checked = false;
+          op2digitsSelect.disabled = true;
+          op2digitsSelect.style.opacity = '0.5';
+        }
+      });
+
+      // When subtraction is checked
+      subtractionCheckbox.addEventListener('change', function () {
+        if (this.checked) {
+          // If subtraction is checked, uncheck multiplication
+          multiplicationCheckbox.checked = false;
+          op2digitsSelect.disabled = true;
+          op2digitsSelect.style.opacity = '0.5';
+        }
+      });
+
+      function generateWorksheet() {
+        const digits = parseInt(document.getElementById('digits').value);
+        const op2digits = parseInt(document.getElementById('op2digits').value);
+        const regrouping = document.getElementById('regrouping').value;
+        const showzeros = document.getElementById('showzeros').value === 'yes';
+        const additionChecked = additionCheckbox.checked;
+        const subtractionChecked = subtractionCheckbox.checked;
+        const multiplicationChecked = multiplicationCheckbox.checked;
+        const pages = parseInt(document.getElementById('pages').value);
+
+        if (!additionChecked && !subtractionChecked && !multiplicationChecked) {
+          alert('Please select at least one operation type');
+          return;
+        }
+
+        worksheetContainer.innerHTML = '';
+        worksheetContainer.classList.remove('hidden');
+
+        // Generate all pages
+        for (let page = 0; page < pages; page++) {
+          const pageDiv = document.createElement('div');
+          pageDiv.className = 'worksheet-page p-8 bg-white';
+
+          const grid = document.createElement('div');
+          let cols = 5;
+          if (multiplicationChecked) {
+            if (op2digits > 1) {
+              cols = 3;
+            } else {
+              cols = 4;
             }
-            
-            function hasAdditionRegrouping(a, b) {
-                // Convert numbers to strings and pad with leading zeros if needed
-                const strA = a.toString();
-                const strB = b.toString();
-                const maxLength = Math.max(strA.length, strB.length);
-                const paddedA = strA.padStart(maxLength, '0');
-                const paddedB = strB.padStart(maxLength, '0');
-                
-                let carry = 0;
-                for (let i = maxLength - 1; i >= 0; i--) {
-                    const digitA = parseInt(paddedA[i]);
-                    const digitB = parseInt(paddedB[i]);
-                    const sum = digitA + digitB + carry;
-                    
-                    if (sum >= 10) {
-                        return true; // Regrouping needed
-                    }
-                    carry = sum >= 10 ? 1 : 0;
+          }
+          grid.className = `grid grid-cols-${cols} gap-10`;
+
+          // 32 problems per page (4 columns x 8 rows)
+          for (let i = 0; i < (multiplicationCheckbox ? (op2digits > 1 ? 8 : 12) : 30); i++) {
+            const problem = generateProblem(digits, op2digits, regrouping, additionChecked, subtractionChecked, multiplicationCheckbox);
+            const problemDiv = document.createElement('div');
+            if (problem.operator === '+' || problem.operator === '-') {
+              problemDiv.className = 'math-problem grid grid-cols-2 gap-2';
+
+              const topOperand = document.createElement('div');
+              topOperand.className = 'operand-row';
+              topOperand.textContent = problem.top;
+
+              const operator = document.createElement('div');
+              operator.className = 'operator';
+              operator.textContent = problem.operator;
+
+              const bottomOperand = document.createElement('div');
+              bottomOperand.className = 'operand-row';
+              bottomOperand.textContent = problem.bottom;
+
+              problemDiv.appendChild(document.createElement('div'));
+              problemDiv.appendChild(topOperand);
+              problemDiv.appendChild(operator);
+              problemDiv.appendChild(bottomOperand);
+            } else if (problem.operator === 'x') {
+              const answerDigits = Math.max(
+                (parseInt(problem.top) * parseInt(problem.bottom)).toString().length,
+                problem.top.length,
+                problem.bottom.length,
+              );
+              const addRows = problem.top.length * problem.bottom.length;
+              problemDiv.className = `justify-self-end self-start grid grid-cols-${answerDigits + 1} gap-0 w-${((answerDigits + 1) * 8)} h-${8 + ((addRows + 3) * 10)}`;
+              const placeMap = ['O', 'T', 'H', 'Th', 'TTh', 'HTh', 'M', 'TM', 'HM', 'ThM']
+              for (let j = 0; j < answerDigits + 1; j++) {
+                const col = document.createElement('div');
+                col.className = 'math-col-header w-8 h-8 text-center border-r border-gray-200';
+                const place = answerDigits - j;
+                col.textContent = j === 0 ? '' : (placeMap?.[place] ?? '-');
+                problemDiv.appendChild(col);
+              }
+              // op1
+              const op1 = problem.top.padStart(answerDigits + 1, ' ')
+              for (let j = 0; j < answerDigits + 1; j++) {
+                const col = document.createElement('div');
+                col.className = 'math-col w-8 h-10 text-center border-r border-gray-200';
+                col.textContent = op1[j]
+                problemDiv.appendChild(col);
+              }
+              // op2
+              const op2 = problem.bottom.padStart(answerDigits + 1, ' ')
+              for (let j = 0; j < answerDigits + 1; j++) {
+                const col = document.createElement('div');
+                col.className = 'math-col w-8 h-10 text-center border-r border-gray-200 border-b';
+                col.textContent = j === 0 ? 'x' : op2[j]
+                problemDiv.appendChild(col);
+              }
+              // answer rows
+              let op1Place = 0;
+              let op2Place = 0;
+              for (let k = 0; k < addRows; k++) {
+                let zeros = op1Place + op2Place;
+                for (let j = 0; j < answerDigits + 1; j++) {
+                  const col = document.createElement('div');
+                  col.className = 'math-col w-8 h-10 text-center border-r border-b border-gray-100 text-gray-300';
+                  col.textContent = ' ';
+                  if (k === addRows - 1 && j === 0) {
+                    col.textContent = '+';
+                  } else if (showzeros && j > answerDigits - zeros) {
+                    col.textContent = '0';
+                  }
+                  problemDiv.appendChild(col);
                 }
-                return false;
+                op1Place = (op1Place + 1) % problem.top.length;
+                if (k % problem.top.length === problem.top.length - 1) {
+                  op2Place = (op2Place + 1) % problem.bottom.length;
+                }
+              }
+              for (let j = 0; j < answerDigits + 1; j++) {
+                const col = document.createElement('div');
+                col.className = 'math-col w-8 h-10 text-center border-r border-t border-gray-200';
+                col.textContent = ' ';
+                problemDiv.appendChild(col);
+              }
             }
-            
-            function hasSubtractionRegrouping(a, b) {
-                // Convert numbers to strings and pad with leading zeros if needed
-                const strA = a.toString();
-                const strB = b.toString();
-                const maxLength = Math.max(strA.length, strB.length);
-                const paddedA = strA.padStart(maxLength, '0');
-                const paddedB = strB.padStart(maxLength, '0');
-                
-                for (let i = 0; i < maxLength; i++) {
-                    const digitA = parseInt(paddedA[i]);
-                    const digitB = parseInt(paddedB[i]);
-                    
-                    if (digitA < digitB) {
-                        return true; // Regrouping needed
-                    }
-                }
-                return false;
+            grid.appendChild(problemDiv);
+          }
+
+          pageDiv.appendChild(grid);
+          worksheetContainer.appendChild(pageDiv);
+        }
+      }
+
+      function hasAdditionRegrouping(a, b) {
+        // Convert numbers to strings and pad with leading zeros if needed
+        const strA = a.toString();
+        const strB = b.toString();
+        const maxLength = Math.max(strA.length, strB.length);
+        const paddedA = strA.padStart(maxLength, '0');
+        const paddedB = strB.padStart(maxLength, '0');
+
+        let carry = 0;
+        for (let i = maxLength - 1; i >= 0; i--) {
+          const digitA = parseInt(paddedA[i]);
+          const digitB = parseInt(paddedB[i]);
+          const sum = digitA + digitB + carry;
+
+          if (sum >= 10) {
+            return true; // Regrouping needed
+          }
+          carry = sum >= 10 ? 1 : 0;
+        }
+        return false;
+      }
+
+      function hasSubtractionRegrouping(a, b) {
+        // Convert numbers to strings and pad with leading zeros if needed
+        const strA = a.toString();
+        const strB = b.toString();
+        const maxLength = Math.max(strA.length, strB.length);
+        const paddedA = strA.padStart(maxLength, '0');
+        const paddedB = strB.padStart(maxLength, '0');
+
+        for (let i = 0; i < maxLength; i++) {
+          const digitA = parseInt(paddedA[i]);
+          const digitB = parseInt(paddedB[i]);
+
+          if (digitA < digitB) {
+            return true; // Regrouping needed
+          }
+        }
+        return false;
+      }
+
+      function generateProblem(digits, op2digits, regrouping, additionChecked, subtractionChecked, multiplicationChecked) {
+        let operator;
+        let operations = [];
+
+        if (additionChecked) operations.push('+');
+        if (subtractionChecked) operations.push('-');
+        if (multiplicationChecked) operations.push('x');
+
+        // Randomly choose between available operations
+        operator = operations[Math.floor(Math.random() * operations.length)];
+
+        let top, bottom;
+        let validProblem = false;
+        let attempts = 0;
+        const maxAttempts = 100;
+
+        while (!validProblem && attempts < maxAttempts) {
+          attempts++;
+
+          if (operator === '+') {
+            // For addition, both numbers can be any value
+            top = Math.floor(Math.random() * (Math.pow(10, digits) - Math.pow(10, digits - 1))) + Math.pow(10, digits - 1);
+            bottom = Math.floor(Math.random() * (Math.pow(10, digits) - Math.pow(10, digits - 1))) + Math.pow(10, digits - 1);
+
+            // Check regrouping requirements
+            const hasRegrouping = hasAdditionRegrouping(top, bottom);
+
+            if (regrouping === 'disallow' && hasRegrouping) continue;
+            if (regrouping === 'require' && !hasRegrouping) continue;
+
+            validProblem = true;
+          } else if (operator === '-') {
+            // For subtraction, we need to ensure the result is not negative
+            top = Math.floor(Math.random() * (Math.pow(10, digits) - Math.pow(10, digits - 1))) + Math.pow(10, digits - 1);
+
+            if (regrouping === 'disallow') {
+              // For no regrouping, each digit of bottom must be <= corresponding digit of top
+              const topStr = top.toString().padStart(digits, '0');
+              let bottomDigits = [];
+
+              for (let i = 0; i < digits; i++) {
+                const topDigit = parseInt(topStr[i]);
+                bottomDigits.push(Math.floor(Math.random() * (topDigit + 1)));
+              }
+
+              bottom = parseInt(bottomDigits.join(''));
+            } else {
+              // For subtraction with regrouping allowed or required
+              const minBottom = regrouping === 'require' ? Math.pow(10, digits - 1) : 1;
+              bottom = Math.floor(Math.random() * (top - minBottom + 1)) + minBottom;
+
+              // Check regrouping requirements
+              const hasRegrouping = hasSubtractionRegrouping(top, bottom);
+
+              if (regrouping === 'require' && !hasRegrouping) continue;
             }
-            
-            function generateProblem(digits, regrouping, additionChecked, subtractionChecked) {
-                let operator;
-                let operations = [];
-                
-                if (additionChecked) operations.push('+');
-                if (subtractionChecked) operations.push('-');
-                
-                // Randomly choose between available operations
-                operator = operations[Math.floor(Math.random() * operations.length)];
-                
-                let top, bottom;
-                let validProblem = false;
-                let attempts = 0;
-                const maxAttempts = 100;
-                
-                while (!validProblem && attempts < maxAttempts) {
-                    attempts++;
-                    
-                    if (operator === '+') {
-                        // For addition, both numbers can be any value
-                        top = Math.floor(Math.random() * (Math.pow(10, digits) - Math.pow(10, digits - 1))) + Math.pow(10, digits - 1);
-                        bottom = Math.floor(Math.random() * (Math.pow(10, digits) - Math.pow(10, digits - 1))) + Math.pow(10, digits - 1);
-                        
-                        // Check regrouping requirements
-                        const hasRegrouping = hasAdditionRegrouping(top, bottom);
-                        
-                        if (regrouping === 'disallow' && hasRegrouping) continue;
-                        if (regrouping === 'require' && !hasRegrouping) continue;
-                        
-                        validProblem = true;
-                    } else {
-                        // For subtraction, we need to ensure the result is not negative
-                        top = Math.floor(Math.random() * (Math.pow(10, digits) - Math.pow(10, digits - 1))) + Math.pow(10, digits - 1);
-                        
-                        if (regrouping === 'disallow') {
-                            // For no regrouping, each digit of bottom must be <= corresponding digit of top
-                            const topStr = top.toString().padStart(digits, '0');
-                            let bottomDigits = [];
-                            
-                            for (let i = 0; i < digits; i++) {
-                                const topDigit = parseInt(topStr[i]);
-                                bottomDigits.push(Math.floor(Math.random() * (topDigit + 1)));
-                            }
-                            
-                            bottom = parseInt(bottomDigits.join(''));
-                        } else {
-                            // For subtraction with regrouping allowed or required
-                            const minBottom = regrouping === 'require' ? Math.pow(10, digits - 1) : 1;
-                            bottom = Math.floor(Math.random() * (top - minBottom + 1)) + minBottom;
-                            
-                            // Check regrouping requirements
-                            const hasRegrouping = hasSubtractionRegrouping(top, bottom);
-                            
-                            if (regrouping === 'require' && !hasRegrouping) continue;
-                        }
-                        
-                        validProblem = true;
-                    }
-                }
-                
-                // If we couldn't find a valid problem after many attempts, just return something
-                if (!validProblem) {
-                    top = 100;
-                    bottom = operator === '+' ? 50 : 50;
-                }
-                
-                return {
-                    top: top.toString(),
-                    bottom: bottom.toString(),
-                    operator: operator
-                };
+            validProblem = true;
+          } else if (operator === 'x') {
+            top = Math.floor(Math.random() * (Math.pow(10, digits) - Math.pow(10, digits - 1))) + Math.pow(10, digits - 1);
+            const topStr = top.toString().padStart(digits, '0');
+            let maxTop = 0;
+            for (let i = 0; i < digits; i++) {
+              const topDigit = parseInt(topStr[i]);
+              maxTop = Math.max(topDigit, maxTop);
             }
-            
-            function printWorksheet() {
-                if (worksheetContainer.innerHTML === '') {
-                    alert('Please generate a worksheet first');
-                    return;
-                }
-                
-                window.print();
+            if (regrouping === 'disallow') {
+              // For no regrouping, each digit of bottom must be <= corresponding digit of top
+              let bottomDigits = [];
+              for (let i = 0; i < op2digits; i++) {
+                bottomDigits.push(Math.floor(Math.random() * (10 / maxTop)));
+              }
+              bottom = parseInt(bottomDigits.join(''));
+            } else {
+              // For subtraction with regrouping allowed or required
+              const minBottom = regrouping === 'require' ? Math.ceil(10 / maxTop) : 1;
+              bottom = Math.floor(Math.random() * (Math.pow(10, op2digits) - Math.pow(10, op2digits - 1))) + minBottom;
+              if (bottom === 1) {
+                bottom = 2
+              } else if (op2digits === 1 && bottom === 10) {
+                bottom = 9
+              }
             }
-            
-            function previewWorksheet() {
-                if (worksheetContainer.innerHTML === '') {
-                    generateWorksheet();
-                }
-                
-                // Show the first page as preview
-                const firstPage = worksheetContainer.querySelector('.worksheet-page');
-                previewContent.innerHTML = '';
-                previewContent.appendChild(firstPage.cloneNode(true));
-                
-                previewContainer.classList.remove('hidden');
-            }
-        });
-    </script>
+            validProblem = true;
+          }
+        }
+
+        // If we couldn't find a valid problem after many attempts, just return something
+        if (!validProblem) {
+          top = 100;
+          bottom = operator === '+' ? 50 : 50;
+        }
+
+        return {
+          top: top.toString(),
+          bottom: bottom.toString(),
+          operator: operator
+        };
+      }
+
+      function printWorksheet() {
+        if (worksheetContainer.innerHTML === '') {
+          alert('Please generate a worksheet first');
+          return;
+        }
+
+        window.print();
+      }
+    });
+  </script>
 </body>
+
 </html>

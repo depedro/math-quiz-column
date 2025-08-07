@@ -442,11 +442,9 @@
             } else {
               // For subtraction with regrouping allowed or required
               const minBottom = regrouping === 'require' ? Math.ceil(10 / maxTop) : 1;
-              bottom = Math.floor(Math.random() * (Math.pow(10, op2digits) - Math.pow(10, op2digits - 1))) + minBottom;
+              bottom = Math.floor(Math.random() * (Math.pow(10, op2digits) - Math.max(minBottom, Math.pow(10, op2digits - 1)))) + minBottom;
               if (bottom === 1) {
                 bottom = 2
-              } else if (op2digits === 1 && bottom === 10) {
-                bottom = 9
               }
             }
             validProblem = true;

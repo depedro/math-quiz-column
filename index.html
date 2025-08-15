@@ -25,6 +25,7 @@
         margin: 0;
         background: white;
       }
+
     }
 
     .math-problem {
@@ -52,6 +53,33 @@
       font-variant-numeric: tabular-nums;
       font-feature-settings: 'tnum' 1;
       align-items: center;
+    }
+
+    .math-col-div-t {
+      font-family: 'Edu NSW ACT Foundation', cursive;
+      font-size: 30px;
+      letter-spacing: 0.5rem;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: 'tnum' 1;
+      align-items: center;
+      text-align: center;
+      border-right: 1px solid rgba(229, 231, 235);
+      border-top: 2px solid black;
+    }
+
+
+    .bb-dashed {
+      border-bottom: 1px dashed rgba(239, 241, 245);
+    }
+
+    .math-col-div-b {
+      font-family: 'Edu NSW ACT Foundation', cursive;
+      font-size: 30px;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: 'tnum' 1;
+      align-items: center;
+      border-right: 2px solid black;
+      border-radius: 0px 0px 10px 0px;
     }
 
     .operand-row {
@@ -118,15 +146,19 @@
           <div class="flex align-items-center space-x-2 mt-2">
             <label class="flex items-center">
               <input type="checkbox" class="mr-2" id="addition">
-              <span>Addition</span>
+              <span>Add</span>
             </label>
             <label class="flex items-center">
               <input type="checkbox" class="mr-2" id="subtraction">
-              <span>Subtraction</span>
+              <span>Sub</span>
             </label>
             <label class="flex items-center">
               <input type="checkbox" class="mr-2" id="multiplication" checked>
-              <span>Multiplication</span>
+              <span>Mul</span>
+            </label>
+            <label class="flex items-center">
+              <input type="checkbox" class="mr-2" id="division">
+              <span>Div</span>
             </label>
           </div>
         </div>
@@ -162,6 +194,7 @@
       const additionCheckbox = document.getElementById('addition');
       const subtractionCheckbox = document.getElementById('subtraction');
       const multiplicationCheckbox = document.getElementById('multiplication');
+      const divisionCheckbox = document.getElementById('division');
       const op2digitsSelect = document.getElementById('op2digits');
 
       generateBtn.addEventListener('click', generateWorksheet);
@@ -173,6 +206,21 @@
           // If multiplication is checked, uncheck addition and subtraction
           additionCheckbox.checked = false;
           subtractionCheckbox.checked = false;
+          divisionCheckbox.checked = false;
+          op2digitsSelect.disabled = false;
+          op2digitsSelect.style.opacity = '1';
+        } else {
+          op2digitsSelect.disabled = true;
+          op2digitsSelect.style.opacity = '0.5';
+        }
+      });
+
+      divisionCheckbox.addEventListener('change', function () {
+        if (this.checked) {
+          // If multiplication is checked, uncheck addition and subtraction
+          additionCheckbox.checked = false;
+          subtractionCheckbox.checked = false;
+          multiplicationCheckbox.checked = false;
           op2digitsSelect.disabled = false;
           op2digitsSelect.style.opacity = '1';
         } else {
@@ -186,6 +234,7 @@
         if (this.checked) {
           // If addition is checked, uncheck multiplication
           multiplicationCheckbox.checked = false;
+          divisionCheckbox.checked = false;
           op2digitsSelect.disabled = true;
           op2digitsSelect.style.opacity = '0.5';
         }
@@ -196,6 +245,7 @@
         if (this.checked) {
           // If subtraction is checked, uncheck multiplication
           multiplicationCheckbox.checked = false;
+          divisionCheckbox.checked = false;
           op2digitsSelect.disabled = true;
           op2digitsSelect.style.opacity = '0.5';
         }
@@ -209,10 +259,16 @@
         const additionChecked = additionCheckbox.checked;
         const subtractionChecked = subtractionCheckbox.checked;
         const multiplicationChecked = multiplicationCheckbox.checked;
+        const divisionChecked = divisionCheckbox.checked;
         const pages = parseInt(document.getElementById('pages').value);
 
-        if (!additionChecked && !subtractionChecked && !multiplicationChecked) {
+        if (!additionChecked && !subtractionChecked && !multiplicationChecked && !divisionChecked) {
           alert('Please select at least one operation type');
+          return;
+        }
+
+        if (divisionChecked && digits < op2digits) {
+          alert('For division op2 should be smaller');
           return;
         }
 
@@ -226,18 +282,28 @@
 
           const grid = document.createElement('div');
           let cols = 5;
+          let rows = 6;
           if (multiplicationChecked) {
             if (op2digits > 1) {
               cols = 3;
+              rows = 2;
             } else {
               cols = 4;
+              rows = 3;
+            }
+          } else if (divisionChecked) {
+            rows = 2;
+            if (op2digits > 1) {
+              cols = 5;
+            } else {
+              cols = 6;
             }
           }
           grid.className = `grid grid-cols-${cols} gap-10`;
 
           // 32 problems per page (4 columns x 8 rows)
-          for (let i = 0; i < (multiplicationCheckbox ? (op2digits > 1 ? 8 : 12) : 30); i++) {
-            const problem = generateProblem(digits, op2digits, regrouping, additionChecked, subtractionChecked, multiplicationCheckbox);
+          for (let i = 0; i < cols * rows; i++) {
+            const problem = generateProblem(digits, op2digits, regrouping, additionChecked, subtractionChecked, multiplicationChecked, divisionChecked);
             const problemDiv = document.createElement('div');
             if (problem.operator === '+' || problem.operator === '-') {
               problemDiv.className = 'math-problem grid grid-cols-2 gap-2';
@@ -297,7 +363,7 @@
                 let zeros = op1Place + op2Place;
                 for (let j = 0; j < answerDigits + 1; j++) {
                   const col = document.createElement('div');
-                  col.className = 'math-col w-8 h-10 text-center border-r border-b border-gray-100 text-gray-300';
+                  col.className = 'math-col w-8 h-10 text-right border-r border-b border-gray-100 text-gray-300';
                   col.textContent = ' ';
                   if (k === addRows - 1 && j === 0) {
                     col.textContent = '+';
@@ -316,6 +382,61 @@
                 col.className = 'math-col w-8 h-10 text-center border-r border-t border-gray-200';
                 col.textContent = ' ';
                 problemDiv.appendChild(col);
+              }
+            } else if (problem.operator === '/') {
+              const topDigits = problem.top.length;
+              const answerDigits = Math.floor(parseInt(problem.top) / parseInt(problem.bottom)).toString().length;
+              const divisorW = problem.bottom.length * 8
+              problemDiv.className = `justify-self-end self-start grid grid-cols-${topDigits + problem.bottom.length} gap-0 w-${(problem.top.length * 8 + divisorW)} h-${8 + ((answerDigits * 2 + 1) * 10)}`;
+              const placeMap = ['O', 'T', 'H', 'Th', 'TTh', 'HTh', 'M', 'TM', 'HM', 'ThM']
+              const col = document.createElement('div');
+              col.className = `math-col-header col-span-${problem.bottom.length} w-${divisorW} h-8 text-center border-r border-gray-200`;
+              problemDiv.appendChild(col);
+              for (let j = 0; j < topDigits; j++) {
+                const col = document.createElement('div');
+                col.className = 'math-col-header w-8 h-8 text-center border-r border-gray-200';
+                const place = topDigits - 1 - j;
+                col.textContent = placeMap?.[place] ?? '-';
+                problemDiv.appendChild(col);
+              }
+              // result row
+              for (let j = 0; j < topDigits + 1; j++) {
+                const col = document.createElement('div');
+                col.className = `math-col-header col-span-${j === 0 ? problem.bottom.length : 1} w-${j === 0 ? divisorW : 8} h-8 text-center border-r border-gray-200`;
+                col.textContent = ' ';
+                problemDiv.appendChild(col);
+              }
+              // question row
+              // divisor
+              const divisorCol = document.createElement('div');
+              divisorCol.className = `math-col-div-b col-span-${problem.bottom.length}  w-${divisorW} h-10 text-right pr-2`;
+              divisorCol.textContent = problem.bottom;
+              problemDiv.appendChild(divisorCol);
+              // top
+              for (let j = 0; j < topDigits; j++) {
+                const col = document.createElement('div');
+                col.className = 'math-col-div-t w-8 h-10 text-center';
+                col.textContent = problem.top[j]
+                problemDiv.appendChild(col);
+              }
+              // answer rows
+              let rowCnt = 1;
+              for (let k = 0; k < answerDigits * 2; k++) {
+                rowCnt += 1;
+                for (let j = 0; j < topDigits + 1; j++) {
+                  const col = document.createElement('div');
+                  col.className = `math-col col-span-${j === 0 ? problem.bottom.length : 1}   w-${j === 0 ? divisorW : 8} text-right h-10 border-r border-gray-200 text-gray-400`;
+                  col.textContent = ' ';
+                  if (rowCnt % 2 === 0) {
+                    col.className += ' border-b'
+                    if (j === 0) {
+                      col.textContent = '-';
+                    }
+                  } else if (j > 0 && (rowCnt < answerDigits * 2)) {
+                    col.className += ' bb-dashed'
+                  }
+                  problemDiv.appendChild(col);
+                }
               }
             }
             grid.appendChild(problemDiv);
@@ -367,13 +488,14 @@
         return false;
       }
 
-      function generateProblem(digits, op2digits, regrouping, additionChecked, subtractionChecked, multiplicationChecked) {
+      function generateProblem(digits, op2digits, regrouping, additionChecked, subtractionChecked, multiplicationChecked, divisionChecked) {
         let operator;
         let operations = [];
 
         if (additionChecked) operations.push('+');
         if (subtractionChecked) operations.push('-');
         if (multiplicationChecked) operations.push('x');
+        if (divisionChecked) operations.push('/');
 
         // Randomly choose between available operations
         operator = operations[Math.floor(Math.random() * operations.length)];
@@ -450,13 +572,66 @@
               }
             }
             validProblem = true;
+          } else if (operator === '/') {
+            bottom = Math.floor(Math.random() * (Math.pow(10, op2digits) - Math.pow(10, op2digits - 1))) + Math.pow(10, op2digits - 1);
+            if (regrouping === 'disallow') {
+              bottom = Math.floor(bottom / 2)
+            }
+            if (bottom <= 1) {
+              bottom = 2
+            }
+            const bottomUpperLimit = Math.pow(10, op2digits) - 1
+            let topDigits = [];
+            if (regrouping === 'disallow') {
+              // For no regrouping, each part of top should be a multiplier of bottom
+              while (topDigits.length < digits) {
+                let p = 0;
+                if (digits - topDigits.length < op2digits) {
+                  p = Math.floor(Math.random() * Math.pow(10, digits - topDigits.length) - 1)
+                } else {
+                  p = Math.floor(Math.random() * (bottomUpperLimit / bottom)) * bottom
+                  if (p === 0) {
+                    p = bottom
+                  }
+                  if (digits === topDigits.length + p.toString().length) {
+                    p += Math.floor(Math.random() * (bottomUpperLimit - p)) // reminder
+                  }
+                }
+                const pStr = p.toString()
+                for (let i = 0; i < pStr.length; i++) {
+                  topDigits.push(pStr[i])
+                }
+                top = parseInt(topDigits.join(''));
+              }
+            } else {
+              top = Math.floor(Math.random() * (Math.pow(10, digits) - Math.pow(10, digits - 1))) + Math.pow(10, digits - 1);
+              if (regrouping === 'required') {
+                const topStr = top.toString();
+                const seg = topStr.splice(0, op2digits);
+                const segInt = parseInt(seg);
+                if (segInt % bottom === 0) { // make regrouping
+                  let newSeg = 0
+                  if (segInt + 1 >= bottomUpperLimit) {
+                    newSeg = segInt - 1
+                  } else {
+                    newSeg = segInt + 1
+                  }
+                  const newSegStr = newSeg.toString();
+                  for (let i = 0; i < op2digits; i++) {
+                    topStr[i] = newSeg[i];
+                  }
+                  top = parseInt(topStr)
+                }
+              }
+            }
+            validProblem = true;
           }
         }
 
         // If we couldn't find a valid problem after many attempts, just return something
         if (!validProblem) {
           top = 100;
-          bottom = operator === '+' ? 50 : 50;
+          bottom = operator === '+' ? 50 : 20;
         }
 
         return {
